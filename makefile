@@ -55,7 +55,7 @@ back:
 
 dock_serv:
 	$(info Docker Services)
-	docker compose up redis db
+	docker compose up redis db -d
 
 check_root:
 	$(info Check Root)
@@ -66,7 +66,7 @@ check_root:
 
 dock_run:
 	$(info Docker Run)
-	docker compose up
+	docker compose up -d
 
 clean_dock:
 	$(info Clean Docker)
