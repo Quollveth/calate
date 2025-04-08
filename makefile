@@ -5,7 +5,13 @@ FRONT_DIR := front
 BACK_DIR := back
 OUTPUT_DIR := output
 
-.PHONY: local clean front back docker clean_dock front_dock back_dock dock_run move_front
+GIT_HASH := $(shell git log --format="%h" -n 1)
+APPNAME_LOWER := $(shell echo $(APPNAME) | tr 'A-Z' 'a-z')
+TAG := $(APPNAME_LOWER):$(GIT_HASH)
+
+export
+
+.PHONY: local clean front back docker clean_dock front_dock back_dock dock_run move_front check_root
 
 # local
 
@@ -29,17 +35,19 @@ back:
 
 # docker
 
-GIT_HASH := $(shell git log --format="%h" -n 1)
-APPNAME_LOWER := $(shell echo $(APPNAME) | tr 'A-Z' 'a-z')
-TAG := $(APPNAME_LOWER):$(GIT_HASH)
+docker: check_root front_dock back_dock dock_run
 
-docker: front_dock back_dock dock_run
+check_root:
+	@if [ "$$(id -u)" -ne 0 ]; then \
+		echo "This operation must be run as root. Use sudo."; \
+		exit 1; \
+	fi
 
 dock_run:
-	docker run --rm -d -p $(PORT):$(PORT) $(TAG)
+	docker compose up
 
 clean_dock:
-	sudo docker rmi $(shell sudo docker image ls | grep $(APPNAME_LOWER) | awk '{print $3}')
+	docker rmi $(shell sudo docker image ls | grep $(APPNAME_LOWER) | awk '{print $3}')
 	rm -fr $(BACK_DIR)/dist
 
 front_dock: front move_front
@@ -51,5 +59,3 @@ move_front:
 
 back_dock:
 	cd $(BACK_DIR) && \
-	docker build --tag $(TAG) .
-	rm -fr $(BACK_DIR)/dist

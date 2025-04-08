@@ -1,0 +1,36 @@
+services:
+  server:
+    build:
+      context: ./${BACK_DIR}
+    image: ${TAG}
+    ports:
+      - "${PORT}:${PORT}"
+    depends_on:
+      - db
+      - redis
+    environment:
+      - PORT=${PORT}
+      - APPNAME=${APPNAME}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - REDIS_HOST=redis
+      - REDIS_PORT=${REDIS_PORT}
+  db:
+    image: postgres:16
+    restart: always
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7
+    restart: always
+    ports:
+      - "${REDIS_PORT}:6379"
+
+volumes:
+  pgdata:
